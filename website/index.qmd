@@ -1,0 +1,26 @@
+---
+title: "Gabriel Fraguere"
+subtitle: "Undergraduate Student"
+# `profile.jpg` photo by Jan Tinneberg on https://unsplash.com
+image: profile.jpeg
+about: # https://quarto.org/docs/websites/website-about.html
+  template: solana
+  image-shape: rounded
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/gfraguere17
+    - icon: linkedin
+      text: Linkedin
+      href: https://www.linkedin.com/in/gabriel-fraguere-883075225/ 
+---
+
+{{< lipsum 1 >}}
+
+## Education
+
+University of XYZ, City \| Location \| Sept 20XX - June 20XX
+
+## Experience
+
+Workplace \| Job title \| April 20XX - present

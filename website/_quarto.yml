@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Home"
+  open-graph: true # https://quarto.org/docs/websites/website-tools.html#open-graph
+  page-footer: "Made with ❤️ and Quarto"
+  navbar:
+    title: Gabriel Fraguere
+    right:
+      - text: Final Project
+        icon: megaphone
+        href: projects/finalproject.qmd
+    tools: 
+      
+format:
+  html:
+    backgroundcolor: "#05054D"
+    fontcolor: "aliceblue"
+    linkcolor: "#30A9E6"
+    mainfont: "sarif"
+    fontsize: 17px
+    theme: [cosmo, styles.scss]
+
