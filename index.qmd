@@ -1,11 +1,26 @@
 ---
-title: "gfraguere17.github.io"
+title: "Gabriel Fraguere"
+subtitle: "Current Undergraduate studying Statistics"
+# `profile.jpg` photo by Jan Tinneberg on https://unsplash.com
+image: profile.jpeg
+about: # https://quarto.org/docs/websites/website-about.html
+  template: solana
+  image-shape: rounded
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/gfraguere17
+    - icon: linkedin
+      text: Linkedin
+      href: https://www.linkedin.com/in/gabriel-fraguere-883075225/ 
 ---
 
-This is a Quarto website.
+{{< lipsum 1 >}}
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+## Education
 
-```{r}
-1 + 1
-```
+University of XYZ, City \| Location \| Sept 20XX - June 20XX
+
+## Experience
+
+Workplace \| Job title \| April 20XX - present

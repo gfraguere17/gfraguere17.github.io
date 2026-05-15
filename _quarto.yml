@@ -1,6 +1,9 @@
 project:
   type: website
   output-dir: docs
+  render:
+    - index.qmd
+    - finalproject.qmd
 
 website:
   title: "Home"
@@ -10,7 +13,7 @@ website:
     title: Gabriel Fraguere
     right:
       - text: Final Project
-        icon: megaphone
+        icon: dash-circle
         href: projects/finalproject.qmd
     tools: 
       
