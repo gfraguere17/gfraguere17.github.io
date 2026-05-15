@@ -1,5 +1,9 @@
 ---
 title: "Pokémon Pokédex Analysis"
+format:
+  html:
+    backgroundcolor: white
+    fontcolor: black
 ---
 
 ## Summary
