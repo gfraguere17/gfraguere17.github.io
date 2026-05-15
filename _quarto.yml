@@ -12,9 +12,9 @@ website:
   navbar:
     title: Gabriel Fraguere
     right:
-      - text: Final Project
+      - text: Pokémon Pokédex Analysis
         icon: dash-circle
-        href: finalproject.html
+        href: projects/finalproject.html
     tools: 
       
 format:
