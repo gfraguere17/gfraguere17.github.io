@@ -14,7 +14,7 @@ website:
     right:
       - text: Final Project
         icon: dash-circle
-        href: projects/finalproject.qmd
+        href: projects/finalproject.html
     tools: 
       
 format:
