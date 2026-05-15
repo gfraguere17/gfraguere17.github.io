@@ -1,0 +1,550 @@
+---
+title: "Pokémon Pokédex Analysis"
+---
+
+## Summary
+
+I wanted to explore if it was possible to determine how strong a Pokemon was (their `base_experience` stat) based off their HP, attack, defense, and other stats, as well as based on their type. Beginning by first exploring the distribution for stats I viewed as most significant, `base_experience` and `hp`, we saw that there was a weak, positive association between the two, but not enough to suggest a definitive strong, positive trend. After this, I determined that considering more variables was necessary to get a more accurate prediction, rather than by just looking at their trend. To practice this, I fit a k-nearest neighbors model and a linear regression model on the data, both of which used all numeric predictors and the Pokemon's type. My results showed that the linear regression model was better at predicting `base_experience` than our KNN model. From our results, we cannot conclusively say that we can predict `base_experience` from a Pokemon's stats alone; we likely require a different method of modeling to see more accurate results. 
+
+![As shown, the spread of our data for `base_experience` and `hp` is weakly positive, not enough to suggest a strong, positive relationship.](C:/Users/Gabriel/Desktop/r shit/scatterplot base and hp.png)
+
+## Motivation and Context
+
+```{r}
+#| label: do this first
+#| echo: false
+#| message: false
+
+# change this to the location of your Quarto file containing your project; then delete this comment
+here::i_am("Users/Gabriel/Desktop/r shit/gfraguere17.github/gfraguere17.github.io/projects/finalproject.qmd")
+```
+
+I decided to investigate a dataset which contains the information for 949 different Pokemon, from the franchise by Nintendo. The information provided includes a Pokemon's `weight`, `height`, as well as the different values for specific stats, like `speed` or `attack`. The Pokemon come from the first 7 generations of Pokemon, ranging from powerful and strong Pokemon like Mega-Evolutions and Legendaries, to basic and common Pokemon. These Pokemon, as mentioned, also have specific stat values related to the games/franchise, like `speed` or `attack`, but also `type1`. I decided to investigate this data set since I have been surrounded by self-described Pokemon-fanatics all my life, and so I felt most comfortable analyzing this data set. 
+
+## Packages Used In This Analysis
+
+```{r}
+#| label: load packages
+#| message: false
+#| warning: false
+
+library(here)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(rsample) # Lets us split our data
+
+library(pokemon) # This loads our actual Pokemon data set 
+library(workflows) # This lets us create workflows
+library(recipes) # This lets us make recipes for our workflows
+library(parsnip) # This lets us perform linear regression
+library(kknn) # This lets us perform modeling with KNN
+library(tune) # This lets us perform tuning 
+library(yardstick) # This lets us collect metrics of our models 
+```
+
+
+| Package | Use |
+|-------------------------------|----------------------------------------|
+| [here](https://github.com/jennybc/here_here) | to easily load and save data |
+| [readr](https://readr.tidyverse.org/) | to import the CSV file data |
+| [dplyr](https://dplyr.tidyverse.org/) | to massage and summarize data |
+| [rsample](https://rsample.tidymodels.org/) | to split data into training and test sets |
+| [ggplot2](https://ggplot2.tidyverse.org/) | to create nice-looking and informative graphs |
+| [pokemon](https://cran.r-project.org/web/packages/pokemon/index.html) | to load our Pokemon data set 
+| [workflows] (https://workflowr.github.io/workflowr/) | to create workflows 
+| [recipes] (https://cran.r-project.org/web/packages/recipes/index.html) | to create recipes 
+| [kknn] (https://cran.r-project.org/web/packages/kknn/index.html) | to perform knn modeling 
+| [parsnip] (https://parsnip.tidymodels.org/) | to perform linear regression 
+| [tune] (https://cran.r-project.org/web/packages/tune/index.html) | to perform tuning on our parameters 
+| [yardstick] (https://yardstick.tidymodels.org/) | to collect estimates of how well our model is doing 
+
+## Data Description
+
+As mentioned, the data set I decided to investigate contains information on 949 different Pokemon, across 7 different generations, while also including different forms of the same Pokemon, like Mega-Evolutions and other variants (alola forms, etc). Each observation in our data set corresponds to a Pokemon, and the 22 variables/columns in our data set correspond to a different stat being recorded. As mentioned, the variables range from `height` and `weight`, as well as other variables specific to Pokemon, like `attack`, `speed`, and their `type`. (In this case, `type1` refers to the primary element that the Pokemon derives its power from, like water or fire). The data was collected by Internet users "williamorim" and "marcusmunch" on GitHub, with the information being taken from the `Bulbagarden` Wikipedia page for Pokemon. 
+
+## Data Wrangling 
+
+I want to split our data set into a training and test set, with a proportion of 0.75. This allows us to perform supervised modeling on our data set later on. Before splitting, I do also want to perform some data wrangling, in order to remove some Pokemon from our data set. 
+
+This is because our data set, as mentioned, has Mega-Evolutions and alola variants of already-existing Pokemon in our data set. These Mega-Evolutions and alola variants share the same stats as the base Pokemon, with only a difference in name. We'll remove these observations, for the sake our our exploration. To wrangle our data, we'll "remove" the last 146 observations/Pokemon, since these are the Mega-Evolutions/other variants. 
+
+```{r}
+#| label: update data set 
+pokemon.fix <- pokemon |> 
+  slice(1:803) # The command `slice` keeps the first 803 observations.
+
+nrow(pokemon.fix) # This shows us the new number of observations in the data 
+# set after data wrangling.
+```
+We now have 803 Pokemon in our data set (`pokemon.fix`). We'll now split the data set with a proportion of 0.75. 
+
+```{r}
+#| label: splitting the Pokemon dataset into a training and testing set 
+set.seed(617, kind = "Mersenne-Twister")
+
+poke.split <- initial_split(pokemon.fix, prop = 0.75) # We are splitting with a 
+# proportion of 75% of the original data in the training set, and the other 
+# 25% set aside for the testing set. 
+
+poke.train <- training(poke.split) # This creates our training set. 
+poke.test <- testing(poke.split) # This creates our testing set. 
+```
+
+```{r}
+#| label: checking the size of the training and testing sets 
+nrow(poke.train) # This is how many observations are in our training set. 
+nrow(poke.test) # This is how many observations are in our testing set. 
+```
+
+As shown, we now have 602 Pokemon in our training set, and 201 Pokemon in our test set. 
+
+## Exploratory Data Analysis
+
+```{r}
+#| label: looking at the Pokemon data
+glimpse(pokemon)
+```
+
+Through this investigation, I wanted to explore if it is possible to predict a Pokemon's `base_experience` stat, from their other stats, (`attack`, `hp`, `type1`, etc), for any Pokemon in our data set. I chose `base_experience` as a response value to predict, in order to essentially predict how "strong" or "powerful" a Pokemon is based off its other stats. I am expecting that stronger Pokemon (higher `base_experience`) are more likely to show higher values for their stats, than weaker Pokemon (lower `base_experience`). 
+
+I'll begin by looking at the various distributions for `base_experience`, `hp` or health points for each Pokemon, and `type1`; `base_experience` since this is our response variable, `hp` since health points is also a stat that I would expect to increase with an increase in `base_experience`, and `type1` since I also assume that rarer types (types that came out later in the franchise's history) are more likely to have "stronger" Pokemon, (based on my understanding of the game). 
+
+Looking at these distributions gives us a better idea of what type of pattern or response to expect when attempting to predict `base_experience`. We'll first look at the summaries for each variable we're looking at. 
+
+```{r}
+#| label: look at five number summary of base experience and hp
+poke.train |> 
+  summarize(
+    mean = mean(base_experience), # Mean 
+    sd = sd(base_experience), # Standard deviation 
+    min = min(base_experience), # Minimum
+    q1 = quantile(base_experience, 0.25), # Q1 
+    median = median(base_experience), # Median
+    q3 = quantile(base_experience, 0.75), # Q3
+    max = max(base_experience) # Maximum
+  )
+
+poke.train |> 
+  summarize(
+    mean = mean(hp), # Mean 
+    sd = sd(hp), # Standard deviation 
+    min = min(hp), # Minimum
+    q1 = quantile(hp, 0.25), # Q1 
+    median = median(hp), # Median
+    q3 = quantile(hp, 0.75), # Q3
+    max = max(hp) # Maximum
+  )
+```
+
+We can see that `base_experience` has a mean of approximately 144.12, with a standard deviation of 73.95. It also appears that we do have an outlier at 608, given that that our third quartile is 178.5 ($608 > 346.88 = 178.5 + (1.5)(109.5)$). Here, given that we have a large outlier relative to Q3, I would assume the distribution of `base_experience` to be bell-shaped, slightly right-skewed, with the data centered around the 130-180 range. 
+
+For `hp`, we have a mean of 69.22, with a standard deviation of 26.18. Since our IQR is smaller than for `base_experience`, the spread of the data is more concentrated around the middle 50% of the data. We also have an outlier of 255, ($255 > 125 = 80 + (1.5)(30)$), which also implies right skewness. I would assume the distribution here to also be bell-shaped, not as right-skewed, but not entirely symmetric given that our median and mean are not equal.
+
+For a better picture of the distribution, we'll plot a histogram of both numeric variables, as well as for `type1`. 
+
+```{r}
+#| label: plotting base experience 
+ggplot(
+  data = poke.train, 
+  mapping = aes( # This argument maps a specific aspect of the plot (x) to a 
+    #particular variable in the data set (base_experience)
+    x = base_experience 
+  )
+) + 
+  geom_histogram(
+    center = 125, # This argument refers to the center of one bin in the histogram. 
+    binwidth = 10, # This argument refers to the width of each bin, which helps 
+    # with reading the plot.
+    fill = "olivedrab2" # This argument simply colors the bins. 
+  ) + 
+  labs( # This command creates labels for the title, x-axis, and y-axis. 
+    x = "Base Experience",
+    y = "Frequency of Pokemon with that base experience",
+    title = "Pokemon and their base experience (according to Bulbapedia)"
+  )
+
+```
+
+From here, we can see that the distribution of `base_experience` in our training set is moderately right skewed. The distribution peaks at around ~40-80 `base_experience`, with roughly 175 Pokemon within that range. As we increase `base_experience`, we can see that there are less Pokemon with those levels. There also appears to be a second and third peak in the data, a moderate concentration of the data in the 150-180 range and smaller concentration in the 225-250 range. We can also see the high outlier of 608 present on the graph.  
+
+This plot suggests that for our training set, there are three major concentrations of data, where these Pokemon hover around the same values for `base_experience`. Generally, I was mostly correct in my prediction for the distribution, since the number of Pokemon generally decreases as `base_experience` increases but I didn't expect there to be two-three peaks. 
+
+We'll continue and plot `hp`. 
+
+```{r}
+#| label: plotting hp  
+ggplot(
+  data = poke.train, 
+  mapping = aes( 
+    x = hp, 
+  )
+) + 
+  geom_histogram(
+    center = 125, 
+    binwidth = 10, 
+    fill = "firebrick4"
+  ) + 
+  labs(
+    x = "HP",
+    y = "Frequency of Pokemon with that HP",
+    title = "Pokemon and their HP (according to Bulbapedia)"
+  )
+
+```
+
+In comparison to the previous histogram, the distribution of `hp` is much more unimodal, and almost symmetrical. There is some very slight right-skewness, given that we have an outlier. The peak of the distribution is also much wider than I expected, which suggests that a considerable portion of Pokemon hover within the range of 40-75 for `hp`, with a majority of the rest of the data just sitting outside this range, (mostly above, say ~75-125). This plot suggests a mostly symmetrical, bell-shaped distribution for `hp` in our training set, implying that I was mostly accurate in my prediction of this distribution. 
+
+Before we look at these variables together, I want to also look at the distribution for `type1`. 
+
+```{r}
+#| label: look at distribution of type
+poke.train |> 
+  group_by(type_1) |>
+  summarize(
+    Freq = n() # This code will give us the number of observations/Pokemon with these types. 
+  )
+```
+
+For `type`, we can see that `water` and `normal` types are the most prevalent within our training set, with there being 83 and 73 observations respectively. We have the least amount of `flying` types, with there being only 3, and the next smallest are `fairy`, `ice`, and `steel`, respectively. From this I'd expect `water` and `normal` to contain the largest middle range for `base_experience`, and the smaller types to have higher medians/concentrations of `base_experience`
+
+```{r}
+#| label: plot the types 
+ggplot( # This will plot the different types of Pokemon and their cardinality. 
+  data = poke.train,
+  mapping = aes(
+    x = type_1
+  )
+) + 
+  geom_bar() + 
+  theme( # This command just helps with legibility when it comes to reading. 
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1
+      )
+    ) + 
+  labs(
+    x = "Types",
+    y = "Frequency of Pokemon with that (primary) type",
+    title = "Pokemon and their (primary) type (according to Bulbapedia)"
+  )
+```
+
+From here, we'll now look at a boxplot plotting `base_experience` for each type. 
+
+```{r}
+#| label: plotting base experience among the types of Pokemon 
+
+ggplot(
+  data = poke.train,
+  mapping = aes(
+    x = type_1, 
+    y = base_experience,
+    fill = type_1 
+  )
+)  + 
+  geom_boxplot() + 
+  geom_point(
+    alpha = 0.1,
+    position = position_jitter()
+  ) + 
+  scale_fill_manual(
+    values = c("olivedrab","gray53", "tan3", "khaki1", "hotpink3", "beige", "orangered", "lightskyblue2", "lightcyan4", "palegreen4", "navajowhite4", "paleturquoise1", "seashell4", "aquamarine", "purple4", "gray80", "honeydew2", "dodgerblue")
+  ) + 
+  coord_flip() + 
+  labs(
+    x = "Base Experience",
+    y = "Types of Pokemon",
+    title = "Base Experience for each Pokemon type"
+  )
+```
+
+From looking at the plot above, the first thing that stood out to me was that `flying`, `poison`, and `dark` types all have the largest median in proportion to their IQR, with `flying` type having the IQR of all the types, ranging from 150 to 266. Compared to all of the types, `water` and `normal` have a moderately sized boxes, which implies that there is much more spread among the middle 50% of these types. However, there are outliers present in the `normal` type which exceed an `base_experience` stat of 300. 
+
+We'll next compare `base_experience` and `hp` by plotting a scatterplot, including a LOESS curve to show its local trend. 
+```{r}
+#| label: plotting base experience and hp 
+ggplot(
+  data = poke.train, 
+  mapping = aes(
+    x = base_experience, 
+    y = hp 
+  )
+) + 
+  geom_point(
+    alpha = 0.3,
+    color = "darkgoldenrod2"
+  ) + 
+  geom_smooth(
+    method = "loess", # This plots a LOESS curve to show the local trend for 
+    # base_experience and hp
+    se = F, # We don't really care for the confidence interval, so we'll leave it FALSE
+    color = "purple4"
+  ) + 
+  labs(
+    x = "Base Experience",
+    y = "HP",
+    title = "Relationship between `base_experience` and `hp`"
+  )
+```
+From our plot, we can see that the spread of the observations appears weak-moderately, positively correlated, between `base_experience` and `hp`. There is also a lot of variability among the Pokemon, with multiple outliers of `base_experience` AND `hp`, which appears to be the Pokemon Blissey and Chansey. From the plot, we can say that there's weak evidence to suggest a STRONG positive association between `base_experience` and `hp`, with most of the Pokemon's stats varying heavily; yet there the correlation between the two is still weakly positive.
+
+## Supervised Modeling 
+
+From our exploration, seeing as there is a weak association between `base_experience` and `hp`, I decided to fit a k-nearest neighbors model on our data set, as well as a typical linear regression model on our data set. These models would include the other variables in our data set, like `attack`, `defense`, etc, while making predictions for `base_experience`. This is significant seeing as there likely other variables necessary for accurately predicting `base_experience`. 
+
+I specifically went with a KNN model since I want to predict a numeric response, `base_experience`, and I presume that Pokemon with similar stats, would also have similar stats for `base_experience`, (going off my knowledge of Pokemon).  The relationship also isn't entirely linear, and KNN provides a simple model that can display nonlinear relationships. I also will be tuning the hyperparameter $k$, which represents the number of neighbors we'll be using in our KKN model.   
+
+K-nearest neighbors works by identifying $k$ "neighbors", or $k$ closest data points to a given observation in our training data, and predicting its response value (`base_experience` in this case), based on the averages of `base_experience` from its neighbors. We want to avoid a small $k$, since we might create too-simple of a model and begin overfitting, (low bias, but high variance due to neighbors' averages will vary increasingly with smaller $k$s). We also want to avoid a large $k$, otherwise we may underfit on our test set, (low variance, but high bias due to similar averages as $k$ increases). 
+
+We begin by first setting up our cross validation for later, for when we tune $k$.  
+
+```{r}
+#| label: k-fold cross validation set up 
+set.seed(617, kind = "Mersenne-Twister")
+poke.cv <- vfold_cv( # This will create a poke.cv for resampling later when we tune. 
+  poke.train, # This argument is our training set. 
+  v = 5 # This argument is the number of folds we'll be using. 
+)
+```
+
+We'll then create a model using k-nearest neighbors and add it to a workflow 
+
+```{r}
+#| label: create and add knn model to workflow 
+poke.knn.model <- nearest_neighbor( # This creates a k-nearest neighbors model. 
+  mode = "regression", 
+  engine = "kknn",
+  neighbors = tune(), # This is the parameter we're tuning, since we want to 
+  # determine an optimal value for the number of neighbors.  
+  dist_power = 1 # This argument refers to a parameter used in calculating the 
+  # neighbors (Minkowki distance)
+)
+
+poke.knn.recipe <- recipe( # This creates the recipe for predicting 
+  # base_experience based on the stats
+  base_experience ~ type_1 + hp + attack + defense + special_attack + special_defense + speed,
+  data = poke.train 
+) |>
+  step_novel() |>
+  step_zv() |> # These commands is necessary for an error later on
+  step_dummy(all_nominal_predictors()) |> 
+  step_normalize(all_numeric_predictors())  
+
+poke.knn.wflow <- workflow() |> # We'll create our workflow and add the 
+  # KNN model and recipe 
+  add_model(poke.knn.model) |> 
+  add_recipe(poke.knn.recipe)
+```
+
+Next we'll set up the tuning grid to tune `neighbors` to find the best value for $k$, based on the model's RMSE, or residual mean squared error.   
+
+```{r}
+#| label: set up tuning grid for neighbors and dist power 
+#| warning: false
+poke.tune.grid <- expand.grid( # This creates the grid of values that we'll 
+  # use to tune k
+  neighbors = seq(1, 50, by = 1)
+)
+
+poke.knn.tuned <- tune_grid( # This will actually take our workflow, and fit 
+  # the KNN model (for each value of k in our tune grid), on each 
+  # cross-validation fold, evaluating the RMSE for each fold
+  poke.knn.wflow,
+  resamples = poke.cv,
+  grid = poke.tune.grid, 
+  metrics = metric_set(rmse)
+)
+
+poke.knn.bestk <- select_best( # We'll select the best value for k 
+  poke.knn.tuned)
+poke.knn.bestk
+
+```
+
+From our results, we can see that the best value for $k$ is $k=6$ neighbors.
+
+We'll plot our tuned model, and look at the RMSE for each value of $k$. 
+
+```{r}
+#| label: plot tuned model and look at summary of rmse for values of k 
+autoplot(poke.knn.tuned) 
+poke.knn.results <- poke.knn.tuned |> collect_metrics()
+poke.knn.results
+
+```
+
+As the plot shows, as we move from $k=1$ to $k=6$, the curve for RMSE drops immensely, with a minimum at $k=6$, suggesting this is the optimal value for the number of neighbors that we should use in our model. Looking at the summary, we can see that the RMSE is indeed the lowest for the possible values of $k$ (39.90), with a standard error of 2.98.
+
+We'll finalize our workflow, and make predictions on our test set. 
+
+```{r}
+#| label: finalize workflow and make predictions on test set for knn
+poke.knn.f.wflow <- poke.knn.wflow |> # This finalizes our workflow with our 
+  # selected value for k
+  finalize_workflow(
+    poke.knn.bestk
+  )
+
+poke.knn.fit <- fit(poke.knn.f.wflow, # We fit our workflow/model on the 
+                    # training data with new value for k 
+                     data = poke.train)
+
+poke.knn.pred <- predict( # We make predictions on the test set with our 
+  # new fitted model 
+  poke.knn.fit,
+  new_data = poke.test
+)
+
+poke.knn.f.pred <- poke.test |> # We'll take a look at our predictions for 
+  # base_experience
+  bind_cols(poke.knn.pred) |> 
+  select(pokemon, base_experience, .pred)
+poke.knn.f.pred # This is the Pokemon, their base_experience, and their 
+# predicted base_experience based on the KNN model we created. 
+# For reference, the RMSE of our model with k = 7 was 38.270
+```
+
+As shown in the output, we have the predicted (`.pred` column) `base_experience` for each of the Pokemon in the testing set, alongside their actual `base_experience`. For some of the Pokemon, the predicted `base_experience` wasn't far off from the actual, (for example, Pidgey's predicted `base_experience` of 50.27 wasn't far off from it's actual stat of 50.0, (neither was Ekans, 58 vs. 56.7). For the rest of the Pokemon, the residual is slight (~5-20 `base_experience`), and for a few, it's very off. For example, Beedrill's actual `base_experience` stat was 178, while it was predicted to be 130.82. 
+
+We'll get the cross-validated RMSE for our final model, for comparison later.
+
+```{r}
+#| label: obtain the cross validated RMSE 
+poke.knn.f.cv <- fit_resamples( # We'll perform cross validation to assess accuracy
+  poke.knn.f.wflow,
+  resamples = poke.cv,
+  metrics = metric_set(rmse)
+)
+
+poke.knn.cv.results <- poke.knn.f.cv |> # We'll look at the accuracy of our model.
+  collect_metrics()
+
+poke.knn.cv.results
+```
+
+Following this, I also want to fit a linear regression model on the data, to compare how accurate our model was at predicting `base_experience` versus a regular, linear regression model.
+
+```{r}
+#| label: create and add linear regression model to workflow 
+#| warning: false
+poke.lm.model <- linear_reg( # We'll create the model 
+  mode = "regression", 
+  engine = "lm"
+)
+
+poke.lm.wflow <- workflow() |> 
+  add_model(poke.lm.model) |>
+  add_recipe(poke.knn.recipe) # We're using the same recipe 
+
+poke.lm.cv <- fit_resamples( # We'll perform cross validation to assess accuracy
+  poke.lm.wflow,
+  resamples = poke.cv,
+  metrics = metric_set(rmse)
+)
+  
+poke.lm.results <- poke.lm.cv |> collect_metrics() # We'll look at the accuracy of our model. 
+poke.lm.results
+
+```
+
+Lastly, we'll fit our linear regression model on the training set, and see it's predictions for the test set. 
+
+```{r}
+#| label: finalize workflow and make predictions on testing set for linear regression 
+#| warning: false 
+poke.lm.fit <- fit(poke.lm.wflow, # We fit our workflow/model on the training data
+                     data = poke.train)
+
+poke.lm.pred <- predict( # We make predictions on the test set with our new fitted model 
+  poke.lm.fit,
+  new_data = poke.test
+)
+
+poke.lm.f.pred <- poke.test |> # We'll take a look at our predictions for base_experience
+  bind_cols(poke.lm.pred) |> 
+  select(pokemon, base_experience, .pred)
+
+poke.lm.f.pred # We'll compare our predictions with both models 
+poke.knn.f.pred
+```
+
+It appears as though the KNN model has better predictions for some Pokemon, (Pidgey, Ekans, Sandshrew), and the linear regression for others (Arbok, Butterfree, etc), but we can't really tell for sure which predicts better. For this, we'll later look at their accuracy metrics, (RMSE). The root mean sum of errors is the quadratic mean of the differences between the actual value for `base_experience`, and it's predicted value. The lower RMSE a model has, the better it is at predicting. 
+
+## Insights  
+
+As I stated initially, for any Pokemon in our data set, I wanted to try predicting their `base_experience` stat based on their others (`hp`, `attack`, `type1`, etc). I initially expected that for stronger Pokemon, we would also expect to see higher values for their numeric stats, (like `hp` or `attack`); and for `type1`, based on my knowledge of Pokemon, I expected the smaller type groups to have higher overall concentrations for `base_experience`, seeing as these types were introduced later on, and were reserved for "rarer" Pokemon.
+
+```{r}
+#| label: insights for base experience and hp 
+ggplot(
+  data = poke.train, 
+  mapping = aes(
+    x = base_experience, 
+    y = hp 
+  )
+) + 
+  geom_point(
+    alpha = 0.3,
+    color = "darkgoldenrod2"
+  ) + 
+  geom_smooth(
+    method = "loess", # This plots a LOESS curve to show the local trend for 
+    # base_experience and hp
+    se = F, # We don't really care for the confidence interval, so we'll leave it FALSE
+    color = "purple4"
+  ) + 
+  labs(
+    x = "Base Experience",
+    y = "HP",
+    title = "Relationship between `base_experience` and `hp`"
+  )
+```
+From my exploration of the data, I would argue that there isn't enough evidence to support a *strong*, positive association between `hp` and `base_experience`; but the two variables still display a weak positive association, with `base_experience` somewhat increasing as `hp` increases. Initially I had expected the two to be much more strongly, positively correlated, assuming that "powerful" Pokemon would have more health points. While this isn't entirely ruled out by our findings, it is likely that other variables should be considered when evaluating a Pokemon's `base_experience`. 
+
+```{r}
+#| label: insights for Pokemon type and base_experience  
+
+ggplot(
+  data = poke.train,
+  mapping = aes(
+    x = type_1, 
+    y = base_experience,
+    fill = type_1 
+  )
+)  + 
+  geom_boxplot() + 
+  geom_point(
+    alpha = 0.1,
+    position = position_jitter()
+  ) + 
+  scale_fill_manual(
+    values = c("olivedrab","gray53", "tan3", "khaki1", "hotpink3", "beige", "orangered", "lightskyblue2", "lightcyan4", "palegreen4", "navajowhite4", "paleturquoise1", "seashell4", "aquamarine", "purple4", "gray80", "honeydew2", "dodgerblue")
+  ) + 
+  coord_flip() + 
+  labs(
+    x = "Base Experience",
+    y = "Types of Pokemon",
+    title = "Base Experience for each Pokemon type"
+  )
+```
+In regards to `type1`, I was mostly correct in my assumptions, seeing that `dragon` and `steel` have higher concentrations of `base_experience` compared to the other types; but I was surprised by the other results. For instance, I didn't expect the concentration of data for `fairy` to be average compared to the rest, nor did I expect water, which contains the largest number of Pokemon, to have a high median for `base_experience`. And so, while I did correctly expect the "rarer" types to have higher medians of `base_experience`, (like `steel`, `flying`, or `dragon`), I didn't expect other types like `fire` to also have higher concentrations of `base_experience`, or for `fairy` to actually be lower than most types.
+
+From our results, I feel that the distribution of `base_experience` cannot be accurately predicted or shown without considering multiple variables. So I fit a k-nearest neighbors model to predict `base_experience` based on the other variables, while also assuming that Pokemon in our data set with similar stats, likely also share similar `base_experience` stats. I also fit a linear regression model to compare our first model to. After tuning the number of neighbors for the KNN model, and cross-validating to get a metric of accuracy, we found the following RMSE for each model: 
+
+```{r}
+#| label: insights on supervised learning 
+poke.lm.results # We'll look at the RMSE and the standard error for both 
+poke.knn.cv.results 
+```
+
+From our results, we can see that the linear regression model outperforms our k-nearest neighbors model in terms of their RMSE, since the RMSE of our linear regression model is 35.30, and the RMSE for our KNN model is 39.90 at it's lowest with 6 neighbors. Our KNN model also tends to have more variance in their predictions across our resamples, since the standard error of our KNN model is 2.98, compared to our linear regression model's standard error of 2.71. Our predictions of `base_experience` appear to be more accurate with a linear regression model, than with a KNN model.  
+
+### Limitations and Future Work 
+
+From our models, despite tuning the number of neighbors, our KNN model poorly predicted `base_experience` in comparison to our linear regression model. It appears that a KNN model isn't the best method for performing supervised learning on our data set. I presume this is the result of some collinearity between the variables, or grouping among the types of Pokemon. There is a possibility that certain types have higher averages for say, `attack` or `speed`, than others, which would affect the model's predictions. In the future, I would suggest at looking at the data more intensively, and determining how and if we should include interaction terms, or also consider a Pokemon's `type2` stat, despite some having a missing value for this case. 
+
+From my experience here, I feel that the applications and methods that I applied to this data set could be applied to any real data set of living animals or organisms. If given a data set which contained the biometric information of a large number of organisms for a specific species, the use of supervised learning and data exploration as I did here presents researchers with insights into their various health metrics, and also provides researchers with an avenue to go about determining the best method to predict said health metrics. 
+
+
+
