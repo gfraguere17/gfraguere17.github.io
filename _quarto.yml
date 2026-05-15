@@ -11,7 +11,7 @@ website:
     right:
       - text: Pokémon Pokédex Analysis
         icon: dash-circle
-        href: projects/finalproject.html
+        href: projects/finalproject.qmd
     tools: 
       
 format:
