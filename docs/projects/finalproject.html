@@ -138,7 +138,7 @@ window.Quarto = {
 
 <meta property="og:title" content="Pokémon Pokédex Analysis – Home">
 <meta property="og:description" content="">
-<meta property="og:image" content="C:/Users/Gabriel/Desktop/r shit/scatterplot base and hp.png">
+<meta property="og:image" content="C:/Users/Gabriel/Desktop/r shit/gfraguere17.github/gfraguere17.github.io/projects/scatterplot base and hp.png">
 <meta property="og:site_name" content="Home">
 </head>
 
@@ -203,14 +203,15 @@ window.Quarto = {
 <p>I wanted to explore if it was possible to determine how strong a Pokemon was (their <code>base_experience</code> stat) based off their HP, attack, defense, and other stats, as well as based on their type. Beginning by first exploring the distribution for stats I viewed as most significant, <code>base_experience</code> and <code>hp</code>, we saw that there was a weak, positive association between the two, but not enough to suggest a definitive strong, positive trend. After this, I determined that considering more variables was necessary to get a more accurate prediction, rather than by just looking at their trend. To practice this, I fit a k-nearest neighbors model and a linear regression model on the data, both of which used all numeric predictors and the Pokemon’s type. My results showed that the linear regression model was better at predicting <code>base_experience</code> than our KNN model. From our results, we cannot conclusively say that we can predict <code>base_experience</code> from a Pokemon’s stats alone; we likely require a different method of modeling to see more accurate results.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="C:/Users/Gabriel/Desktop/r%20shit/scatterplot%20base%20and%20hp.png" class="img-fluid figure-img"></p>
+<p><img src="C:/Users/Gabriel/Desktop/r%20shit/gfraguere17.github/gfraguere17.github.io/projects/scatterplot%20base%20and%20hp.png" class="img-fluid figure-img"></p>
 <figcaption>As shown, the spread of our data for <code>base_experience</code> and <code>hp</code> is weakly positive, not enough to suggest a strong, positive relationship.</figcaption>
 </figure>
 </div>
 </section>
 <section id="motivation-and-context" class="level2">
 <h2 class="anchored" data-anchor-id="motivation-and-context">Motivation and Context</h2>
-<p>I decided to investigate a dataset which contains the information for 949 different Pokemon, from the franchise by Nintendo. The information provided includes a Pokemon’s <code>weight</code>, <code>height</code>, as well as the different values for specific stats, like <code>speed</code> or <code>attack</code>. The Pokemon come from the first 7 generations of Pokemon, ranging from powerful and strong Pokemon like Mega-Evolutions and Legendaries, to basic and common Pokemon. These Pokemon, as mentioned, also have specific stat values related to the games/franchise, like <code>speed</code> or <code>attack</code>, but also <code>type1</code>. I decided to investigate this data set since I have been surrounded by self-described Pokemon-fanatics all my life, and so I felt most comfortable analyzing this data set.</p>
+<p>I decided to investigate a dataset which contains the information for 949 different Pokemon, from the franchise by Nintendo. The information provided includes a Pokemon’s <code>weight</code>, <code>height</code>, as well as the different values for specific stats, like <code>speed</code> or <code>attack</code>. The Pokemon come from the first 7 generations of Pokemon, ranging from powerful and strong Pokemon like Mega-Evolutions and Legendaries, to basic and common Pokemon. These Pokemon, as mentioned, also have specific stat values related to the games/franchise, like <code>speed</code> or <code>attack</code>, but also <code>type1</code>, (a Pokemon’s “type” refers to the primary element that the Pokemon derives its power from, like water or fire). I decided to investigate this data set since I have been surrounded by self-described Pokemon-fanatics all my life, and so I felt most comfortable analyzing this data set.</p>
+<p>Through this investigation, I wanted to explore if it is possible to predict a Pokemon’s <code>base_experience</code> stat, from their other stats, (<code>attack</code>, <code>hp</code>, <code>type1</code>, etc), for any Pokemon in our data set. I chose <code>base_experience</code> as a response value to predict, in order to essentially predict how “strong” or “powerful” a Pokemon is based off its other stats. I am expecting that stronger Pokemon (higher <code>base_experience</code>) are more likely to show higher values for their stats, than weaker Pokemon (lower <code>base_experience</code>). Regarding type, a categorical variable with over 15 classes, I would predict that types with smaller frequencies of Pokemon, would show a higher median <code>base_experience</code> stat than the others, given that they’re “rarer” and hence reserved for stronger Pokemon.</p>
 </section>
 <section id="packages-used-in-this-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="packages-used-in-this-analysis">Packages Used In This Analysis</h2>
@@ -219,15 +220,15 @@ window.Quarto = {
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsample) <span class="co"># Lets us split our data</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsample) </span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pokemon) <span class="co"># This loads our actual Pokemon data set </span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(workflows) <span class="co"># This lets us create workflows</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(recipes) <span class="co"># This lets us make recipes for our workflows</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parsnip) <span class="co"># This lets us perform linear regression</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kknn) <span class="co"># This lets us perform modeling with KNN</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tune) <span class="co"># This lets us perform tuning </span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(yardstick) <span class="co"># This lets us collect metrics of our models </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pokemon)  </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(workflows) </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(recipes) </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parsnip) </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kknn)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tune) </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(yardstick)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <table class="caption-top table">
 <thead>
@@ -262,27 +263,27 @@ window.Quarto = {
 <td>to load our Pokemon data set</td>
 </tr>
 <tr class="odd">
-<td>[workflows] (https://workflowr.github.io/workflowr/)</td>
+<td><a href="https://workflowr.github.io/workflowr/">workflows</a></td>
 <td>to create workflows</td>
 </tr>
 <tr class="even">
-<td>[recipes] (https://cran.r-project.org/web/packages/recipes/index.html)</td>
+<td><a href="https://cran.r-project.org/web/packages/recipes/index.html">recipes</a></td>
 <td>to create recipes</td>
 </tr>
 <tr class="odd">
-<td>[kknn] (https://cran.r-project.org/web/packages/kknn/index.html)</td>
+<td><a href="https://cran.r-project.org/web/packages/kknn/index.html">kknn</a></td>
 <td>to perform knn modeling</td>
 </tr>
 <tr class="even">
-<td>[parsnip] (https://parsnip.tidymodels.org/)</td>
+<td><a href="https://parsnip.tidymodels.org/">parsnip</a></td>
 <td>to perform linear regression</td>
 </tr>
 <tr class="odd">
-<td>[tune] (https://cran.r-project.org/web/packages/tune/index.html)</td>
-<td>to perform tuning on our parameters</td>
+<td><a href="https://cran.r-project.org/web/packages/tune/index.html">tune</a></td>
+<td>to perform linear regression</td>
 </tr>
 <tr class="even">
-<td>[yardstick] (https://yardstick.tidymodels.org/)</td>
+<td><a href="https://yardstick.tidymodels.org/">yardstick</a></td>
 <td>to collect estimates of how well our model is doing</td>
 </tr>
 </tbody>
@@ -290,12 +291,12 @@ window.Quarto = {
 </section>
 <section id="data-description" class="level2">
 <h2 class="anchored" data-anchor-id="data-description">Data Description</h2>
-<p>As mentioned, the data set I decided to investigate contains information on 949 different Pokemon, across 7 different generations, while also including different forms of the same Pokemon, like Mega-Evolutions and other variants (alola forms, etc). Each observation in our data set corresponds to a Pokemon, and the 22 variables/columns in our data set correspond to a different stat being recorded. As mentioned, the variables range from <code>height</code> and <code>weight</code>, as well as other variables specific to Pokemon, like <code>attack</code>, <code>speed</code>, and their <code>type</code>. (In this case, <code>type1</code> refers to the primary element that the Pokemon derives its power from, like water or fire). The data was collected by Internet users “williamorim” and “marcusmunch” on GitHub, with the information being taken from the <code>Bulbagarden</code> Wikipedia page for Pokemon.</p>
+<p>As mentioned, the data set (<a href="https://cran.r-project.org/web/packages/pokemon/index.html">here</a>) I decided to investigate contains information on 949 different Pokemon, across 7 different generations, while also including different forms of the same Pokemon. Each observation in our data set corresponds to a Pokemon, and the 22 variables/columns in our data set correspond to a different stat being recorded; these range from <code>height</code> and <code>weight</code>, as well as other variables specific to Pokemon, like <code>attack</code>, <code>speed</code>, and their <code>type</code>. The data was collected by Internet users “williamorim” and “marcusmunch” on GitHub, with the information being taken from the <code>Bulbagarden</code> Wikipedia page for Pokemon.</p>
 </section>
 <section id="data-wrangling" class="level2">
 <h2 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h2>
 <p>I want to split our data set into a training and test set, with a proportion of 0.75. This allows us to perform supervised modeling on our data set later on. Before splitting, I do also want to perform some data wrangling, in order to remove some Pokemon from our data set.</p>
-<p>This is because our data set, as mentioned, has Mega-Evolutions and alola variants of already-existing Pokemon in our data set. These Mega-Evolutions and alola variants share the same stats as the base Pokemon, with only a difference in name. We’ll remove these observations, for the sake our our exploration. To wrangle our data, we’ll “remove” the last 146 observations/Pokemon, since these are the Mega-Evolutions/other variants.</p>
+<p>This is because our data set has Mega-Evolutions and alola variants of already-existing Pokemon in our data set. These Mega-Evolutions and alola variants share the same stats as the base Pokemon, with only a difference in name. We’ll remove these observations, for the sake our our exploration. To wrangle our data, we’ll “remove” the last 146 observations/Pokemon, since these are the Mega-Evolutions/other variants.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pokemon.fix <span class="ot">&lt;-</span> pokemon <span class="sc">|&gt;</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">803</span>) <span class="co"># The command `slice` keeps the first 803 observations.</span></span>
@@ -360,7 +361,6 @@ $ generation_id   &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 $ url_image       &lt;chr&gt; "https://raw.githubusercontent.com/HybridShivam/Pokemo…</code></pre>
 </div>
 </div>
-<p>Through this investigation, I wanted to explore if it is possible to predict a Pokemon’s <code>base_experience</code> stat, from their other stats, (<code>attack</code>, <code>hp</code>, <code>type1</code>, etc), for any Pokemon in our data set. I chose <code>base_experience</code> as a response value to predict, in order to essentially predict how “strong” or “powerful” a Pokemon is based off its other stats. I am expecting that stronger Pokemon (higher <code>base_experience</code>) are more likely to show higher values for their stats, than weaker Pokemon (lower <code>base_experience</code>).</p>
 <p>I’ll begin by looking at the various distributions for <code>base_experience</code>, <code>hp</code> or health points for each Pokemon, and <code>type1</code>; <code>base_experience</code> since this is our response variable, <code>hp</code> since health points is also a stat that I would expect to increase with an increase in <code>base_experience</code>, and <code>type1</code> since I also assume that rarer types (types that came out later in the franchise’s history) are more likely to have “stronger” Pokemon, (based on my understanding of the game).</p>
 <p>Looking at these distributions gives us a better idea of what type of pattern or response to expect when attempting to predict <code>base_experience</code>. We’ll first look at the summaries for each variable we’re looking at.</p>
 <div class="cell">
@@ -397,8 +397,8 @@ $ url_image       &lt;chr&gt; "https://raw.githubusercontent.com/HybridShivam/Po
 1  69.2  26.2     1    50     65    80   255</code></pre>
 </div>
 </div>
-<p>We can see that <code>base_experience</code> has a mean of approximately 144.12, with a standard deviation of 73.95. It also appears that we do have an outlier at 608, given that that our third quartile is 178.5 (<span class="math inline">\(608 &gt; 346.88 = 178.5 + (1.5)(109.5)\)</span>). Here, given that we have a large outlier relative to Q3, I would assume the distribution of <code>base_experience</code> to be bell-shaped, slightly right-skewed, with the data centered around the 130-180 range.</p>
-<p>For <code>hp</code>, we have a mean of 69.22, with a standard deviation of 26.18. Since our IQR is smaller than for <code>base_experience</code>, the spread of the data is more concentrated around the middle 50% of the data. We also have an outlier of 255, (<span class="math inline">\(255 &gt; 125 = 80 + (1.5)(30)\)</span>), which also implies right skewness. I would assume the distribution here to also be bell-shaped, not as right-skewed, but not entirely symmetric given that our median and mean are not equal.</p>
+<p>We can see that <code>base_experience</code> has a mean of approximately 144.12, with a standard deviation of 73.95. It also appears that we do have an outlier at 608, given that that our third quartile is 178.5. Here, given that we have a large outlier relative to Q3, I would assume the distribution of <code>base_experience</code> to be bell-shaped, slightly right-skewed, with the data centered around the 130-180 range.</p>
+<p>For <code>hp</code>, we have a mean of 69.22, with a standard deviation of 26.18. Since our IQR is smaller than for <code>base_experience</code>, the spread of the data is more concentrated around the middle 50% of the data. We also have an outlier of 255, which also implies right skewness. I would assume the distribution here to be more bell-shaped, not as right-skewed, but not entirely symmetric given that our median and mean are not equal.</p>
 <p>For a better picture of the distribution, we’ll plot a histogram of both numeric variables, as well as for <code>type1</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
@@ -547,7 +547,7 @@ $ url_image       &lt;chr&gt; "https://raw.githubusercontent.com/HybridShivam/Po
 </div>
 </div>
 </div>
-<p>From looking at the plot above, the first thing that stood out to me was that <code>flying</code>, <code>poison</code>, and <code>dark</code> types all have the largest median in proportion to their IQR, with <code>flying</code> type having the IQR of all the types, ranging from 150 to 266. Compared to all of the types, <code>water</code> and <code>normal</code> have a moderately sized boxes, which implies that there is much more spread among the middle 50% of these types. However, there are outliers present in the <code>normal</code> type which exceed an <code>base_experience</code> stat of 300.</p>
+<p>From looking at the plot above, the first thing that stood out to me was that <code>flying</code>, <code>poison</code>, and <code>dark</code> types all have the largest median in proportion to their IQR, with <code>dragon</code> type having the highest IQR of all the types, ranging from 150 to 266. Compared to all of the types, <code>water</code> and <code>normal</code> have a moderately sized boxes, which implies that there is much more spread among the middle 50% of these types. However, there are outliers present in the <code>normal</code> type which exceed an <code>base_experience</code> stat of 300.</p>
 <p>We’ll next compare <code>base_experience</code> and <code>hp</code> by plotting a scatterplot, including a LOESS curve to show its local trend.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
@@ -583,11 +583,11 @@ $ url_image       &lt;chr&gt; "https://raw.githubusercontent.com/HybridShivam/Po
 </div>
 </div>
 </div>
-<p>From our plot, we can see that the spread of the observations appears weak-moderately, positively correlated, between <code>base_experience</code> and <code>hp</code>. There is also a lot of variability among the Pokemon, with multiple outliers of <code>base_experience</code> AND <code>hp</code>, which appears to be the Pokemon Blissey and Chansey. From the plot, we can say that there’s weak evidence to suggest a STRONG positive association between <code>base_experience</code> and <code>hp</code>, with most of the Pokemon’s stats varying heavily; yet there the correlation between the two is still weakly positive.</p>
+<p>From our plot, we can see that the spread of the observations appears weak-moderately, positively correlated, between <code>base_experience</code> and <code>hp</code>. There is also a lot of variability among the Pokemon, with multiple outliers of <code>base_experience</code> AND <code>hp</code>, which appears to be the Pokemon Blissey and Chansey.</p>
 </section>
 <section id="supervised-modeling" class="level2">
 <h2 class="anchored" data-anchor-id="supervised-modeling">Supervised Modeling</h2>
-<p>From our exploration, seeing as there is a weak association between <code>base_experience</code> and <code>hp</code>, I decided to fit a k-nearest neighbors model on our data set, as well as a typical linear regression model on our data set. These models would include the other variables in our data set, like <code>attack</code>, <code>defense</code>, etc, while making predictions for <code>base_experience</code>. This is significant seeing as there likely other variables necessary for accurately predicting <code>base_experience</code>.</p>
+<p>From our exploration, seeing as there is a weak association between <code>base_experience</code> and <code>hp</code>, I decided to fit a k-nearest neighbors model on our data set. These models would include the other variables in our data set, like <code>attack</code>, <code>defense</code>, etc, while making predictions for <code>base_experience</code>. This is significant seeing as there likely other variables necessary for accurately predicting <code>base_experience</code>.</p>
 <p>I specifically went with a KNN model since I want to predict a numeric response, <code>base_experience</code>, and I presume that Pokemon with similar stats, would also have similar stats for <code>base_experience</code>, (going off my knowledge of Pokemon). The relationship also isn’t entirely linear, and KNN provides a simple model that can display nonlinear relationships. I also will be tuning the hyperparameter <span class="math inline">\(k\)</span>, which represents the number of neighbors we’ll be using in our KKN model.</p>
 <p>K-nearest neighbors works by identifying <span class="math inline">\(k\)</span> “neighbors”, or <span class="math inline">\(k\)</span> closest data points to a given observation in our training data, and predicting its response value (<code>base_experience</code> in this case), based on the averages of <code>base_experience</code> from its neighbors. We want to avoid a small <span class="math inline">\(k\)</span>, since we might create too-simple of a model and begin overfitting, (low bias, but high variance due to neighbors’ averages will vary increasingly with smaller <span class="math inline">\(k\)</span>s). We also want to avoid a large <span class="math inline">\(k\)</span>, otherwise we may underfit on our test set, (low variance, but high bias due to similar averages as <span class="math inline">\(k\)</span> increases).</p>
 <p>We begin by first setting up our cross validation for later, for when we tune <span class="math inline">\(k\)</span>.</p>
@@ -614,8 +614,8 @@ $ url_image       &lt;chr&gt; "https://raw.githubusercontent.com/HybridShivam/Po
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  base_experience <span class="sc">~</span> type_1 <span class="sc">+</span> hp <span class="sc">+</span> attack <span class="sc">+</span> defense <span class="sc">+</span> special_attack <span class="sc">+</span> special_defense <span class="sc">+</span> speed,</span>
 <span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> poke.train </span>
 <span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>() <span class="sc">|&gt;</span></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>() <span class="sc">|&gt;</span> <span class="co"># These commands is necessary for an error later on</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>() <span class="sc">|&gt;</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>() <span class="sc">|&gt;</span><span class="co"># These commands is necessary for an error later on</span></span>
 <span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">|&gt;</span> </span>
 <span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())  </span>
 <span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
@@ -762,7 +762,7 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 1 rmse    standard    39.9     4    2.98 pre0_mod0_post0</code></pre>
 </div>
 </div>
-<p>Following this, I also want to fit a linear regression model on the data, to compare how accurate our model was at predicting <code>base_experience</code> versus a regular, linear regression model.</p>
+<p>Following this, I’ll also just quickly fit a linear regression model on the data, to compare how accurate our model was at predicting <code>base_experience</code> versus a regular, linear regression model.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>poke.lm.model <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>( <span class="co"># We'll create the model </span></span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">"regression"</span>, </span>
@@ -780,29 +780,20 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 <span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>poke.lm.results <span class="ot">&lt;-</span> poke.lm.cv <span class="sc">|&gt;</span> <span class="fu">collect_metrics</span>() <span class="co"># We'll look at the accuracy of our model. </span></span>
-<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>poke.lm.results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 6
-  .metric .estimator  mean     n std_err .config        
-  &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          
-1 rmse    standard    35.3     5    2.71 pre0_mod0_post0</code></pre>
-</div>
-</div>
-<p>Lastly, we’ll fit our linear regression model on the training set, and see it’s predictions for the test set.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>poke.lm.fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(poke.lm.wflow, <span class="co"># We fit our workflow/model on the training data</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> poke.train)</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>poke.lm.pred <span class="ot">&lt;-</span> <span class="fu">predict</span>( <span class="co"># We make predictions on the test set with our new fitted model </span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  poke.lm.fit,</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">new_data =</span> poke.test</span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>poke.lm.f.pred <span class="ot">&lt;-</span> poke.test <span class="sc">|&gt;</span> <span class="co"># We'll take a look at our predictions for base_experience</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(poke.lm.pred) <span class="sc">|&gt;</span> </span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pokemon, base_experience, .pred)</span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>poke.lm.f.pred <span class="co"># We'll compare our predictions with both models </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>poke.lm.fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(poke.lm.wflow, <span class="co"># We fit our workflow/model on the training data</span></span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> poke.train)</span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>poke.lm.pred <span class="ot">&lt;-</span> <span class="fu">predict</span>( <span class="co"># We make predictions on the test set with our new fitted model </span></span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>  poke.lm.fit,</span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">new_data =</span> poke.test</span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>poke.lm.f.pred <span class="ot">&lt;-</span> poke.test <span class="sc">|&gt;</span> <span class="co"># We'll take a look at our predictions for base_experience</span></span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(poke.lm.pred) <span class="sc">|&gt;</span> </span>
+<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pokemon, base_experience, .pred)</span>
+<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>poke.lm.f.pred <span class="co"># We'll compare our predictions with both models </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 201 × 3
    pokemon    base_experience .pred
@@ -819,7 +810,7 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 10 sandshrew               60  61.3
 # ℹ 191 more rows</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>poke.knn.f.pred</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>poke.knn.f.pred</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 201 × 3
    pokemon    base_experience .pred
@@ -843,28 +834,28 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 <h2 class="anchored" data-anchor-id="insights">Insights</h2>
 <p>As I stated initially, for any Pokemon in our data set, I wanted to try predicting their <code>base_experience</code> stat based on their others (<code>hp</code>, <code>attack</code>, <code>type1</code>, etc). I initially expected that for stronger Pokemon, we would also expect to see higher values for their numeric stats, (like <code>hp</code> or <code>attack</code>); and for <code>type1</code>, based on my knowledge of Pokemon, I expected the smaller type groups to have higher overall concentrations for <code>base_experience</code>, seeing as these types were introduced later on, and were reserved for “rarer” Pokemon.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> poke.train, </span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> base_experience, </span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> hp </span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span> </span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.3</span>,</span>
-<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgoldenrod2"</span></span>
-<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
-<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(</span>
-<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">"loess"</span>, <span class="co"># This plots a LOESS curve to show the local trend for </span></span>
-<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># base_experience and hp</span></span>
-<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">se =</span> F, <span class="co"># We don't really care for the confidence interval, so we'll leave it FALSE</span></span>
-<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"purple4"</span></span>
-<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
-<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Base Experience"</span>,</span>
-<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"HP"</span>,</span>
-<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship between `base_experience` and `hp`"</span></span>
-<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> poke.train, </span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> base_experience, </span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> hp </span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span> </span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.3</span>,</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgoldenrod2"</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">"loess"</span>, <span class="co"># This plots a LOESS curve to show the local trend for </span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># base_experience and hp</span></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">se =</span> F, <span class="co"># We don't really care for the confidence interval, so we'll leave it FALSE</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"purple4"</span></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Base Experience"</span>,</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"HP"</span>,</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship between `base_experience` and `hp`"</span></span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
@@ -878,28 +869,28 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 </div>
 <p>From my exploration of the data, I would argue that there isn’t enough evidence to support a <em>strong</em>, positive association between <code>hp</code> and <code>base_experience</code>; but the two variables still display a weak positive association, with <code>base_experience</code> somewhat increasing as <code>hp</code> increases. Initially I had expected the two to be much more strongly, positively correlated, assuming that “powerful” Pokemon would have more health points. While this isn’t entirely ruled out by our findings, it is likely that other variables should be considered when evaluating a Pokemon’s <code>base_experience</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> poke.train,</span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> type_1, </span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> base_experience,</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> type_1 </span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>)  <span class="sc">+</span> </span>
-<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span> </span>
-<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.1</span>,</span>
-<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_jitter</span>()</span>
-<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
-<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(</span>
-<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"olivedrab"</span>,<span class="st">"gray53"</span>, <span class="st">"tan3"</span>, <span class="st">"khaki1"</span>, <span class="st">"hotpink3"</span>, <span class="st">"beige"</span>, <span class="st">"orangered"</span>, <span class="st">"lightskyblue2"</span>, <span class="st">"lightcyan4"</span>, <span class="st">"palegreen4"</span>, <span class="st">"navajowhite4"</span>, <span class="st">"paleturquoise1"</span>, <span class="st">"seashell4"</span>, <span class="st">"aquamarine"</span>, <span class="st">"purple4"</span>, <span class="st">"gray80"</span>, <span class="st">"honeydew2"</span>, <span class="st">"dodgerblue"</span>)</span>
-<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
-<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span> </span>
-<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Base Experience"</span>,</span>
-<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Types of Pokemon"</span>,</span>
-<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Base Experience for each Pokemon type"</span></span>
-<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> poke.train,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> type_1, </span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> base_experience,</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> type_1 </span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>)  <span class="sc">+</span> </span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span> </span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.1</span>,</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_jitter</span>()</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(</span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"olivedrab"</span>,<span class="st">"gray53"</span>, <span class="st">"tan3"</span>, <span class="st">"khaki1"</span>, <span class="st">"hotpink3"</span>, <span class="st">"beige"</span>, <span class="st">"orangered"</span>, <span class="st">"lightskyblue2"</span>, <span class="st">"lightcyan4"</span>, <span class="st">"palegreen4"</span>, <span class="st">"navajowhite4"</span>, <span class="st">"paleturquoise1"</span>, <span class="st">"seashell4"</span>, <span class="st">"aquamarine"</span>, <span class="st">"purple4"</span>, <span class="st">"gray80"</span>, <span class="st">"honeydew2"</span>, <span class="st">"dodgerblue"</span>)</span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span> </span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Base Experience"</span>,</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Types of Pokemon"</span>,</span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Base Experience for each Pokemon type"</span></span>
+<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -908,17 +899,17 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 </div>
 </div>
 </div>
-<p>In regards to <code>type1</code>, I was mostly correct in my assumptions, seeing that <code>dragon</code> and <code>steel</code> have higher concentrations of <code>base_experience</code> compared to the other types; but I was surprised by the other results. For instance, I didn’t expect the concentration of data for <code>fairy</code> to be average compared to the rest, nor did I expect water, which contains the largest number of Pokemon, to have a high median for <code>base_experience</code>. And so, while I did correctly expect the “rarer” types to have higher medians of <code>base_experience</code>, (like <code>steel</code>, <code>flying</code>, or <code>dragon</code>), I didn’t expect other types like <code>fire</code> to also have higher concentrations of <code>base_experience</code>, or for <code>fairy</code> to actually be lower than most types.</p>
-<p>From our results, I feel that the distribution of <code>base_experience</code> cannot be accurately predicted or shown without considering multiple variables. So I fit a k-nearest neighbors model to predict <code>base_experience</code> based on the other variables, while also assuming that Pokemon in our data set with similar stats, likely also share similar <code>base_experience</code> stats. I also fit a linear regression model to compare our first model to. After tuning the number of neighbors for the KNN model, and cross-validating to get a metric of accuracy, we found the following RMSE for each model:</p>
+<p>In regards to <code>type1</code>, I was mostly correct in my assumptions, seeing that <code>dragon</code> and <code>steel</code> have higher concentrations of <code>base_experience</code> compared to the other types. However, I didn’t expect the concentration of data for <code>fairy</code> to be average compared to the rest. And so, while I did correctly expect the “rarer” types to have higher medians of <code>base_experience</code>, (like <code>steel</code>, <code>flying</code>, or <code>dragon</code>), I didn’t expect other types like <code>fire</code> to also have higher concentrations of <code>base_experience</code>, or for <code>fairy</code> to actually be lower than most types.</p>
+<p>From my supervised learning results, we’ll look at the RMSE for each model, the KNN model and the regular linear regression model.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>poke.lm.results <span class="co"># We'll look at the RMSE and the standard error for both </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>poke.lm.results <span class="co"># We'll look at the RMSE and the standard error for both </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 6
   .metric .estimator  mean     n std_err .config        
   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          
 1 rmse    standard    35.3     5    2.71 pre0_mod0_post0</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>poke.knn.cv.results </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>poke.knn.cv.results </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 6
   .metric .estimator  mean     n std_err .config        
@@ -926,11 +917,11 @@ There were issues with some computations   A: x1   B: x1</code></pre>
 1 rmse    standard    39.9     4    2.98 pre0_mod0_post0</code></pre>
 </div>
 </div>
-<p>From our results, we can see that the linear regression model outperforms our k-nearest neighbors model in terms of their RMSE, since the RMSE of our linear regression model is 35.30, and the RMSE for our KNN model is 39.90 at it’s lowest with 6 neighbors. Our KNN model also tends to have more variance in their predictions across our resamples, since the standard error of our KNN model is 2.98, compared to our linear regression model’s standard error of 2.71. Our predictions of <code>base_experience</code> appear to be more accurate with a linear regression model, than with a KNN model.</p>
+<p>From our results, we can see that the linear regression model outperforms our k-nearest neighbors model in terms of their RMSE, since the RMSE of our linear regression model is 35.30, and the RMSE for our KNN model is 39.90 at it’s lowest with 6 neighbors. Our KNN model also tends to have more variance in their predictions across our resamples, since the standard error of our KNN model is 2.98, compared to our linear regression model’s standard error of 2.71. And so, although we tuned the number of neighbors, a linear regression model appears to better predict <code>base_experience</code>.</p>
 <section id="limitations-and-future-work" class="level3">
 <h3 class="anchored" data-anchor-id="limitations-and-future-work">Limitations and Future Work</h3>
-<p>From our models, despite tuning the number of neighbors, our KNN model poorly predicted <code>base_experience</code> in comparison to our linear regression model. It appears that a KNN model isn’t the best method for performing supervised learning on our data set. I presume this is the result of some collinearity between the variables, or grouping among the types of Pokemon. There is a possibility that certain types have higher averages for say, <code>attack</code> or <code>speed</code>, than others, which would affect the model’s predictions. In the future, I would suggest at looking at the data more intensively, and determining how and if we should include interaction terms, or also consider a Pokemon’s <code>type2</code> stat, despite some having a missing value for this case.</p>
-<p>From my experience here, I feel that the applications and methods that I applied to this data set could be applied to any real data set of living animals or organisms. If given a data set which contained the biometric information of a large number of organisms for a specific species, the use of supervised learning and data exploration as I did here presents researchers with insights into their various health metrics, and also provides researchers with an avenue to go about determining the best method to predict said health metrics.</p>
+<p>From our models, despite tuning the number of neighbors, our KNN model poorly predicted <code>base_experience</code> in comparison to our linear regression model. It appears that a KNN model isn’t the best method for performing supervised learning on our data set. I presume this is the result of some collinearity between the variables, or grouping among the types of Pokemon. There is a possibility that certain types have higher averages for say, <code>attack</code> or <code>speed</code>, than others, which would affect the model’s predictions. In the future, I would suggest at looking at the data more intensively, and determining how and if we should include interaction terms in our workflows’ recipes, or also consider a Pokemon’s <code>type2</code> stat, despite some having a missing value for this case.</p>
+<p>From my experience here, I feel that the applications and methods that I applied to this data set could be applied to any real data set of living animals or organisms. Say, if given a data set which contained the biometric information of a large number of organisms for a specific species, the use of supervised learning and data exploration as I did here presents researchers with insights into their various health metrics, and also provides researchers with an avenue to go about determining the best method to predict said health metrics.</p>
 
 
 </section>

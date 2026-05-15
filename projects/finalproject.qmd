@@ -8,7 +8,7 @@ fontcolor: black
 
 I wanted to explore if it was possible to determine how strong a Pokemon was (their `base_experience` stat) based off their HP, attack, defense, and other stats, as well as based on their type. Beginning by first exploring the distribution for stats I viewed as most significant, `base_experience` and `hp`, we saw that there was a weak, positive association between the two, but not enough to suggest a definitive strong, positive trend. After this, I determined that considering more variables was necessary to get a more accurate prediction, rather than by just looking at their trend. To practice this, I fit a k-nearest neighbors model and a linear regression model on the data, both of which used all numeric predictors and the Pokemon's type. My results showed that the linear regression model was better at predicting `base_experience` than our KNN model. From our results, we cannot conclusively say that we can predict `base_experience` from a Pokemon's stats alone; we likely require a different method of modeling to see more accurate results. 
 
-![As shown, the spread of our data for `base_experience` and `hp` is weakly positive, not enough to suggest a strong, positive relationship.](C:/Users/Gabriel/Desktop/r shit/scatterplot base and hp.png)
+![As shown, the spread of our data for `base_experience` and `hp` is weakly positive, not enough to suggest a strong, positive relationship.](C:/Users/Gabriel/Desktop/r shit/gfraguere17.github/gfraguere17.github.io/projects/scatterplot base and hp.png)
 
 ## Motivation and Context
 
@@ -17,11 +17,12 @@ I wanted to explore if it was possible to determine how strong a Pokemon was (th
 #| echo: false
 #| message: false
 
-# change this to the location of your Quarto file containing your project; then delete this comment
 here::i_am("Users/Gabriel/Desktop/r shit/gfraguere17.github/gfraguere17.github.io/projects/finalproject.qmd")
 ```
 
-I decided to investigate a dataset which contains the information for 949 different Pokemon, from the franchise by Nintendo. The information provided includes a Pokemon's `weight`, `height`, as well as the different values for specific stats, like `speed` or `attack`. The Pokemon come from the first 7 generations of Pokemon, ranging from powerful and strong Pokemon like Mega-Evolutions and Legendaries, to basic and common Pokemon. These Pokemon, as mentioned, also have specific stat values related to the games/franchise, like `speed` or `attack`, but also `type1`. I decided to investigate this data set since I have been surrounded by self-described Pokemon-fanatics all my life, and so I felt most comfortable analyzing this data set. 
+I decided to investigate a dataset which contains the information for 949 different Pokemon, from the franchise by Nintendo. The information provided includes a Pokemon's `weight`, `height`, as well as the different values for specific stats, like `speed` or `attack`. The Pokemon come from the first 7 generations of Pokemon, ranging from powerful and strong Pokemon like Mega-Evolutions and Legendaries, to basic and common Pokemon. These Pokemon, as mentioned, also have specific stat values related to the games/franchise, like `speed` or `attack`, but also `type1`, (a Pokemon's "type" refers to the primary element that the Pokemon derives its power from, like water or fire). I decided to investigate this data set since I have been surrounded by self-described Pokemon-fanatics all my life, and so I felt most comfortable analyzing this data set. 
+
+Through this investigation, I wanted to explore if it is possible to predict a Pokemon's `base_experience` stat, from their other stats, (`attack`, `hp`, `type1`, etc), for any Pokemon in our data set. I chose `base_experience` as a response value to predict, in order to essentially predict how "strong" or "powerful" a Pokemon is based off its other stats. I am expecting that stronger Pokemon (higher `base_experience`) are more likely to show higher values for their stats, than weaker Pokemon (lower `base_experience`). Regarding type, a categorical variable with over 15 classes, I would predict that types with smaller frequencies of Pokemon, would show a higher median `base_experience` stat than the others, given that they're "rarer" and hence reserved for stronger Pokemon. 
 
 ## Packages Used In This Analysis
 
@@ -34,15 +35,15 @@ library(here)
 library(readr)
 library(dplyr)
 library(ggplot2)
-library(rsample) # Lets us split our data
+library(rsample) 
 
-library(pokemon) # This loads our actual Pokemon data set 
-library(workflows) # This lets us create workflows
-library(recipes) # This lets us make recipes for our workflows
-library(parsnip) # This lets us perform linear regression
-library(kknn) # This lets us perform modeling with KNN
-library(tune) # This lets us perform tuning 
-library(yardstick) # This lets us collect metrics of our models 
+library(pokemon)  
+library(workflows) 
+library(recipes) 
+library(parsnip) 
+library(kknn)
+library(tune) 
+library(yardstick)
 ```
 
 
@@ -53,23 +54,23 @@ library(yardstick) # This lets us collect metrics of our models
 | [dplyr](https://dplyr.tidyverse.org/) | to massage and summarize data |
 | [rsample](https://rsample.tidymodels.org/) | to split data into training and test sets |
 | [ggplot2](https://ggplot2.tidyverse.org/) | to create nice-looking and informative graphs |
-| [pokemon](https://cran.r-project.org/web/packages/pokemon/index.html) | to load our Pokemon data set 
-| [workflows] (https://workflowr.github.io/workflowr/) | to create workflows 
-| [recipes] (https://cran.r-project.org/web/packages/recipes/index.html) | to create recipes 
-| [kknn] (https://cran.r-project.org/web/packages/kknn/index.html) | to perform knn modeling 
-| [parsnip] (https://parsnip.tidymodels.org/) | to perform linear regression 
-| [tune] (https://cran.r-project.org/web/packages/tune/index.html) | to perform tuning on our parameters 
-| [yardstick] (https://yardstick.tidymodels.org/) | to collect estimates of how well our model is doing 
+| [pokemon](https://cran.r-project.org/web/packages/pokemon/index.html) | to load our Pokemon data set | 
+| [workflows](https://workflowr.github.io/workflowr/) | to create workflows |
+| [recipes](https://cran.r-project.org/web/packages/recipes/index.html) | to create recipes |
+| [kknn](https://cran.r-project.org/web/packages/kknn/index.html) | to perform knn modeling |
+| [parsnip](https://parsnip.tidymodels.org/) | to perform linear regression |
+| [tune](https://cran.r-project.org/web/packages/tune/index.html) | to perform linear regression |
+| [yardstick](https://yardstick.tidymodels.org/) | to collect estimates of how well our model is doing | 
 
 ## Data Description
 
-As mentioned, the data set I decided to investigate contains information on 949 different Pokemon, across 7 different generations, while also including different forms of the same Pokemon, like Mega-Evolutions and other variants (alola forms, etc). Each observation in our data set corresponds to a Pokemon, and the 22 variables/columns in our data set correspond to a different stat being recorded. As mentioned, the variables range from `height` and `weight`, as well as other variables specific to Pokemon, like `attack`, `speed`, and their `type`. (In this case, `type1` refers to the primary element that the Pokemon derives its power from, like water or fire). The data was collected by Internet users "williamorim" and "marcusmunch" on GitHub, with the information being taken from the `Bulbagarden` Wikipedia page for Pokemon. 
+As mentioned, the data set ([here](https://cran.r-project.org/web/packages/pokemon/index.html)) I decided to investigate contains information on 949 different Pokemon, across 7 different generations, while also including different forms of the same Pokemon. Each observation in our data set corresponds to a Pokemon, and the 22 variables/columns in our data set correspond to a different stat being recorded; these range from `height` and `weight`, as well as other variables specific to Pokemon, like `attack`, `speed`, and their `type`. The data was collected by Internet users "williamorim" and "marcusmunch" on GitHub, with the information being taken from the `Bulbagarden` Wikipedia page for Pokemon. 
 
 ## Data Wrangling 
 
 I want to split our data set into a training and test set, with a proportion of 0.75. This allows us to perform supervised modeling on our data set later on. Before splitting, I do also want to perform some data wrangling, in order to remove some Pokemon from our data set. 
 
-This is because our data set, as mentioned, has Mega-Evolutions and alola variants of already-existing Pokemon in our data set. These Mega-Evolutions and alola variants share the same stats as the base Pokemon, with only a difference in name. We'll remove these observations, for the sake our our exploration. To wrangle our data, we'll "remove" the last 146 observations/Pokemon, since these are the Mega-Evolutions/other variants. 
+This is because our data set has Mega-Evolutions and alola variants of already-existing Pokemon in our data set. These Mega-Evolutions and alola variants share the same stats as the base Pokemon, with only a difference in name. We'll remove these observations, for the sake our our exploration. To wrangle our data, we'll "remove" the last 146 observations/Pokemon, since these are the Mega-Evolutions/other variants. 
 
 ```{r}
 #| label: update data set 
@@ -108,8 +109,6 @@ As shown, we now have 602 Pokemon in our training set, and 201 Pokemon in our te
 glimpse(pokemon)
 ```
 
-Through this investigation, I wanted to explore if it is possible to predict a Pokemon's `base_experience` stat, from their other stats, (`attack`, `hp`, `type1`, etc), for any Pokemon in our data set. I chose `base_experience` as a response value to predict, in order to essentially predict how "strong" or "powerful" a Pokemon is based off its other stats. I am expecting that stronger Pokemon (higher `base_experience`) are more likely to show higher values for their stats, than weaker Pokemon (lower `base_experience`). 
-
 I'll begin by looking at the various distributions for `base_experience`, `hp` or health points for each Pokemon, and `type1`; `base_experience` since this is our response variable, `hp` since health points is also a stat that I would expect to increase with an increase in `base_experience`, and `type1` since I also assume that rarer types (types that came out later in the franchise's history) are more likely to have "stronger" Pokemon, (based on my understanding of the game). 
 
 Looking at these distributions gives us a better idea of what type of pattern or response to expect when attempting to predict `base_experience`. We'll first look at the summaries for each variable we're looking at. 
@@ -139,9 +138,9 @@ poke.train |>
   )
 ```
 
-We can see that `base_experience` has a mean of approximately 144.12, with a standard deviation of 73.95. It also appears that we do have an outlier at 608, given that that our third quartile is 178.5 ($608 > 346.88 = 178.5 + (1.5)(109.5)$). Here, given that we have a large outlier relative to Q3, I would assume the distribution of `base_experience` to be bell-shaped, slightly right-skewed, with the data centered around the 130-180 range. 
+We can see that `base_experience` has a mean of approximately 144.12, with a standard deviation of 73.95. It also appears that we do have an outlier at 608, given that that our third quartile is 178.5. Here, given that we have a large outlier relative to Q3, I would assume the distribution of `base_experience` to be bell-shaped, slightly right-skewed, with the data centered around the 130-180 range. 
 
-For `hp`, we have a mean of 69.22, with a standard deviation of 26.18. Since our IQR is smaller than for `base_experience`, the spread of the data is more concentrated around the middle 50% of the data. We also have an outlier of 255, ($255 > 125 = 80 + (1.5)(30)$), which also implies right skewness. I would assume the distribution here to also be bell-shaped, not as right-skewed, but not entirely symmetric given that our median and mean are not equal.
+For `hp`, we have a mean of 69.22, with a standard deviation of 26.18. Since our IQR is smaller than for `base_experience`, the spread of the data is more concentrated around the middle 50% of the data. We also have an outlier of 255, which also implies right skewness. I would assume the distribution here to be more bell-shaped, not as right-skewed, but not entirely symmetric given that our median and mean are not equal.
 
 For a better picture of the distribution, we'll plot a histogram of both numeric variables, as well as for `type1`. 
 
@@ -261,7 +260,7 @@ ggplot(
   )
 ```
 
-From looking at the plot above, the first thing that stood out to me was that `flying`, `poison`, and `dark` types all have the largest median in proportion to their IQR, with `flying` type having the IQR of all the types, ranging from 150 to 266. Compared to all of the types, `water` and `normal` have a moderately sized boxes, which implies that there is much more spread among the middle 50% of these types. However, there are outliers present in the `normal` type which exceed an `base_experience` stat of 300. 
+From looking at the plot above, the first thing that stood out to me was that `flying`, `poison`, and `dark` types all have the largest median in proportion to their IQR, with `dragon` type having the highest IQR of all the types, ranging from 150 to 266. Compared to all of the types, `water` and `normal` have a moderately sized boxes, which implies that there is much more spread among the middle 50% of these types. However, there are outliers present in the `normal` type which exceed an `base_experience` stat of 300. 
 
 We'll next compare `base_experience` and `hp` by plotting a scatterplot, including a LOESS curve to show its local trend. 
 ```{r}
@@ -289,11 +288,11 @@ ggplot(
     title = "Relationship between `base_experience` and `hp`"
   )
 ```
-From our plot, we can see that the spread of the observations appears weak-moderately, positively correlated, between `base_experience` and `hp`. There is also a lot of variability among the Pokemon, with multiple outliers of `base_experience` AND `hp`, which appears to be the Pokemon Blissey and Chansey. From the plot, we can say that there's weak evidence to suggest a STRONG positive association between `base_experience` and `hp`, with most of the Pokemon's stats varying heavily; yet there the correlation between the two is still weakly positive.
+From our plot, we can see that the spread of the observations appears weak-moderately, positively correlated, between `base_experience` and `hp`. There is also a lot of variability among the Pokemon, with multiple outliers of `base_experience` AND `hp`, which appears to be the Pokemon Blissey and Chansey. 
 
 ## Supervised Modeling 
 
-From our exploration, seeing as there is a weak association between `base_experience` and `hp`, I decided to fit a k-nearest neighbors model on our data set, as well as a typical linear regression model on our data set. These models would include the other variables in our data set, like `attack`, `defense`, etc, while making predictions for `base_experience`. This is significant seeing as there likely other variables necessary for accurately predicting `base_experience`. 
+From our exploration, seeing as there is a weak association between `base_experience` and `hp`, I decided to fit a k-nearest neighbors model on our data set. These models would include the other variables in our data set, like `attack`, `defense`, etc, while making predictions for `base_experience`. This is significant seeing as there likely other variables necessary for accurately predicting `base_experience`. 
 
 I specifically went with a KNN model since I want to predict a numeric response, `base_experience`, and I presume that Pokemon with similar stats, would also have similar stats for `base_experience`, (going off my knowledge of Pokemon).  The relationship also isn't entirely linear, and KNN provides a simple model that can display nonlinear relationships. I also will be tuning the hyperparameter $k$, which represents the number of neighbors we'll be using in our KKN model.   
 
@@ -328,8 +327,8 @@ poke.knn.recipe <- recipe( # This creates the recipe for predicting
   base_experience ~ type_1 + hp + attack + defense + special_attack + special_defense + speed,
   data = poke.train 
 ) |>
-  step_novel() |>
-  step_zv() |> # These commands is necessary for an error later on
+  step_zv() |>
+  step_novel() |># These commands is necessary for an error later on
   step_dummy(all_nominal_predictors()) |> 
   step_normalize(all_numeric_predictors())  
 
@@ -425,10 +424,10 @@ poke.knn.cv.results <- poke.knn.f.cv |> # We'll look at the accuracy of our mode
 poke.knn.cv.results
 ```
 
-Following this, I also want to fit a linear regression model on the data, to compare how accurate our model was at predicting `base_experience` versus a regular, linear regression model.
+Following this, I'll also just quickly fit a linear regression model on the data, to compare how accurate our model was at predicting `base_experience` versus a regular, linear regression model.
 
 ```{r}
-#| label: create and add linear regression model to workflow 
+#| label: create and fit linear regression model 
 #| warning: false
 poke.lm.model <- linear_reg( # We'll create the model 
   mode = "regression", 
@@ -446,15 +445,7 @@ poke.lm.cv <- fit_resamples( # We'll perform cross validation to assess accuracy
 )
   
 poke.lm.results <- poke.lm.cv |> collect_metrics() # We'll look at the accuracy of our model. 
-poke.lm.results
 
-```
-
-Lastly, we'll fit our linear regression model on the training set, and see it's predictions for the test set. 
-
-```{r}
-#| label: finalize workflow and make predictions on testing set for linear regression 
-#| warning: false 
 poke.lm.fit <- fit(poke.lm.wflow, # We fit our workflow/model on the training data
                      data = poke.train)
 
@@ -469,7 +460,9 @@ poke.lm.f.pred <- poke.test |> # We'll take a look at our predictions for base_e
 
 poke.lm.f.pred # We'll compare our predictions with both models 
 poke.knn.f.pred
+
 ```
+
 
 It appears as though the KNN model has better predictions for some Pokemon, (Pidgey, Ekans, Sandshrew), and the linear regression for others (Arbok, Butterfree, etc), but we can't really tell for sure which predicts better. For this, we'll later look at their accuracy metrics, (RMSE). The root mean sum of errors is the quadratic mean of the differences between the actual value for `base_experience`, and it's predicted value. The lower RMSE a model has, the better it is at predicting. 
 
@@ -530,9 +523,9 @@ ggplot(
     title = "Base Experience for each Pokemon type"
   )
 ```
-In regards to `type1`, I was mostly correct in my assumptions, seeing that `dragon` and `steel` have higher concentrations of `base_experience` compared to the other types; but I was surprised by the other results. For instance, I didn't expect the concentration of data for `fairy` to be average compared to the rest, nor did I expect water, which contains the largest number of Pokemon, to have a high median for `base_experience`. And so, while I did correctly expect the "rarer" types to have higher medians of `base_experience`, (like `steel`, `flying`, or `dragon`), I didn't expect other types like `fire` to also have higher concentrations of `base_experience`, or for `fairy` to actually be lower than most types.
+In regards to `type1`, I was mostly correct in my assumptions, seeing that `dragon` and `steel` have higher concentrations of `base_experience` compared to the other types. However, I didn't expect the concentration of data for `fairy` to be average compared to the rest. And so, while I did correctly expect the "rarer" types to have higher medians of `base_experience`, (like `steel`, `flying`, or `dragon`), I didn't expect other types like `fire` to also have higher concentrations of `base_experience`, or for `fairy` to actually be lower than most types.
 
-From our results, I feel that the distribution of `base_experience` cannot be accurately predicted or shown without considering multiple variables. So I fit a k-nearest neighbors model to predict `base_experience` based on the other variables, while also assuming that Pokemon in our data set with similar stats, likely also share similar `base_experience` stats. I also fit a linear regression model to compare our first model to. After tuning the number of neighbors for the KNN model, and cross-validating to get a metric of accuracy, we found the following RMSE for each model: 
+From my supervised learning results, we'll look at the RMSE for each model, the KNN model and the regular linear regression model. 
 
 ```{r}
 #| label: insights on supervised learning 
@@ -540,13 +533,10 @@ poke.lm.results # We'll look at the RMSE and the standard error for both
 poke.knn.cv.results 
 ```
 
-From our results, we can see that the linear regression model outperforms our k-nearest neighbors model in terms of their RMSE, since the RMSE of our linear regression model is 35.30, and the RMSE for our KNN model is 39.90 at it's lowest with 6 neighbors. Our KNN model also tends to have more variance in their predictions across our resamples, since the standard error of our KNN model is 2.98, compared to our linear regression model's standard error of 2.71. Our predictions of `base_experience` appear to be more accurate with a linear regression model, than with a KNN model.  
+From our results, we can see that the linear regression model outperforms our k-nearest neighbors model in terms of their RMSE, since the RMSE of our linear regression model is 35.30, and the RMSE for our KNN model is 39.90 at it's lowest with 6 neighbors. Our KNN model also tends to have more variance in their predictions across our resamples, since the standard error of our KNN model is 2.98, compared to our linear regression model's standard error of 2.71. And so, although we tuned the number of neighbors, a linear regression model appears to better predict `base_experience`. 
 
 ### Limitations and Future Work 
 
-From our models, despite tuning the number of neighbors, our KNN model poorly predicted `base_experience` in comparison to our linear regression model. It appears that a KNN model isn't the best method for performing supervised learning on our data set. I presume this is the result of some collinearity between the variables, or grouping among the types of Pokemon. There is a possibility that certain types have higher averages for say, `attack` or `speed`, than others, which would affect the model's predictions. In the future, I would suggest at looking at the data more intensively, and determining how and if we should include interaction terms, or also consider a Pokemon's `type2` stat, despite some having a missing value for this case. 
+From our models, despite tuning the number of neighbors, our KNN model poorly predicted `base_experience` in comparison to our linear regression model. It appears that a KNN model isn't the best method for performing supervised learning on our data set. I presume this is the result of some collinearity between the variables, or grouping among the types of Pokemon. There is a possibility that certain types have higher averages for say, `attack` or `speed`, than others, which would affect the model's predictions. In the future, I would suggest at looking at the data more intensively, and determining how and if we should include interaction terms in our workflows' recipes, or also consider a Pokemon's `type2` stat, despite some having a missing value for this case. 
 
-From my experience here, I feel that the applications and methods that I applied to this data set could be applied to any real data set of living animals or organisms. If given a data set which contained the biometric information of a large number of organisms for a specific species, the use of supervised learning and data exploration as I did here presents researchers with insights into their various health metrics, and also provides researchers with an avenue to go about determining the best method to predict said health metrics. 
-
-
-
+From my experience here, I feel that the applications and methods that I applied to this data set could be applied to any real data set of living animals or organisms. Say, if given a data set which contained the biometric information of a large number of organisms for a specific species, the use of supervised learning and data exploration as I did here presents researchers with insights into their various health metrics, and also provides researchers with an avenue to go about determining the best method to predict said health metrics. 
