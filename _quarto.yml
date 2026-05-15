@@ -3,7 +3,7 @@ project:
   output-dir: docs
   render:
     - index.qmd
-    - finalproject.qmd
+    - finalproject.html
 
 website:
   title: "Home"
@@ -14,7 +14,7 @@ website:
     right:
       - text: Pokémon Pokédex Analysis
         icon: dash-circle
-        href: projects/finalproject.qmd
+        href: projects/finalproject.html
     tools: 
       
 format:
